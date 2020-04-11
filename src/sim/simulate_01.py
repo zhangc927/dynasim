@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import pandas as pd
+from sklearn.neighbors import NearestNeighbors
 
 sim_path = "/Users/christianhilscher/Desktop/dynsim/src/sim/"
 input_path = "/Users/christianhilscher/Desktop/dynsim/input/"
@@ -9,71 +10,69 @@ os.chdir(sim_path)
 from data_prep import SOEP_to_df
 
 
-# df_base = pd.read_stata(input_path + 'SOEP_prepared_costs_2019-11-27_restricted.dta')
-#
-# df = SOEP_to_df(df_base)
-# df_short = df[:1000]
-#
+df_base = pd.read_stata(input_path + 'SOEP_prepared_costs_2019-11-27_restricted.dta')
 
-def _dating_market(dataf):
-    dataf = dataf.copy()
+df = SOEP_to_df(df_base)
+df1 = df[df['year'] == 2000]
+sum(df1.duplicated('pid'))
 
-    eligible = (dataf['in_couple'] == 0) & (dataf['child'] == 0)
-    female_singles = dataf[eligible & (dataf['female'] == 1)]
-    male_singles = dataf[eligible & (dataf['female'] == 0)]
 
-    not_single = dataf[~eligible]
 
-    new_couples = round(0.2 * min(len(female_singles),
-                                  len(male_singles)))
+df_begin = df1.dropna().copy()
+dataf = df1.dropna().copy()
 
-    male_singles['hid'][:new_couples] = female_singles['hid'][:new_couples]
-    male_singles['east'][:new_couples] = female_singles['east'][:new_couples]
-    male_singles['hhweight'][:new_couples] = female_singles['hhweight'][:new_couples]
 
-    male_singles['in_couple'][:new_couples] = 1
-    female_singles['in_couple'][:new_couples] = 1
+eligible = (dataf['in_couple'] == 0) & (dataf['child'] == 0) & (dataf['n_people'] - dataf['n_children'] == 1)
+female_singles = dataf[eligible & (dataf['female'] == 1)]
+male_singles = dataf[eligible & (dataf['female'] == 0)]
 
-    dataf_out = pd.concat((not_single,
-                       female_singles,
-                       male_singles), axis=0)
+not_single = dataf[~eligible]
 
-    assert(
-        len(dataf_out) == len(dataf)
-    ), 'Lenght of dataframe is not the same as before'
+new_couples = round(0.2 * min(len(female_singles),
+                              len(male_singles)))
 
-    return dataf_out, new_couples
+lucky_guys = male_singles.sample(new_couples)
+neigh = NearestNeighbors(n_neighbors=5)
+partners = female_singles.copy()
+happy_girls = pd.DataFrame()
+for i in np.arange(len(lucky_guys)):
+    neigh.fit(partners[['age',
+                              'gross_earnings',
+                              'education',
+                              'employment_status']])
+    p1 = lucky_guys.iloc[i,:]
+    partner_choice = neigh.kneighbors((p1[['age',
+                                           'gross_earnings',
+                                           'education',
+                                           'employment_status']].to_numpy().reshape(1,-1)))
+    partner = np.random.choice(np.ravel(partner_choice[1]), 1)
+    happy_girls = pd.concat([happy_girls, partners.iloc[partner,:]])
+    partners.drop(partners.iloc[partner,:].index, inplace=True)
 
-def _separations(dataf):
-    dataf = dataf.copy()
 
-    probability = np.random.uniform(0, 1, len(dataf))
-    condition_married = (dataf['married'] == 1) & (probability<0.01)
-    condition_incouple = (dataf['in_couple'] == 1) & (dataf['married'] == 0) & (probability<0.02)
-    condition_separation = (condition_married | condition_incouple)
 
-    males = (condition_separation) & (dataf['female'] == 0)
-    dataf.loc[condition_separation, ['married', 'in_couple']] = [[0, 0]]
+#happy_girls1 = happy_girls.copy()
+#lucky_guys1 = lucky_guys.copy()
 
-    # Men moove out; resetting HID
-    dataf.loc[males, 'orighid'] = dataf.loc[males, 'hid'].copy()
-    dataf.loc[males, 'hid'] += np.arange(1, np.sum(males)+1)
 
-    separations_this_period = np.sum(condition_separation)
+lucky_guys.loc[:,'hid'] = happy_girls['hid'].tolist()
+lucky_guys.loc[:,'east'] = happy_girls['east'].tolist()
+lucky_guys.loc[:,'hhweight'] = happy_girls['hhweight'].tolist()
+lucky_guys.loc[:,'in_couple'] = 1
+happy_girls.loc[:,'in_couple'] = 1
 
-    return dataf, separations_this_period
+dici = {'all_female': female_singles,
+            'all_male': male_singles,
+            'happy_girls': happy_girls,
+            'lucky_guys': lucky_guys}
 
-def _marriage(dataf):
-    """
-    10% of all couples get married
-    """
-    dataf = dataf.copy()
+unlucky_guys = dici['all_male'][dici['all_male'].index.isin(dici['lucky_guys'].index) == False]
 
-    marriable = (dataf['married'] == 0) & (dataf['in_couple']==1)
-    probability = np.random.uniform(0, 1, len(dataf))
-    condition = (marriable) & (probability<0.1)
+unhappy_girls = dici['all_female'][dici['all_female'].index.isin(dici['happy_girls'].index) == False]
 
-    dataf.loc[condition, 'married'] = 1
-    marriages_this_period = np.sum(condition)
 
-    return dataf, marriages_this_period
+len(unlucky_guys) + len(lucky_guys) == len(male_singles)
+len(unhappy_girls) + len(happy_girls) == len(female_singles)
+
+
+len(happy_girls) == len(lucky_guys)

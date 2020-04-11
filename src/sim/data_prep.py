@@ -80,6 +80,7 @@ def make_hh_vars(dataf):
     dataf = _hh_income(dataf)
     dataf = _hh_size(dataf)
     dataf = _hh_children(dataf)
+    dataf = _hh_age_youngest(dataf)
     dataf = _hh_fraction_working(dataf)
     dataf.reset_index(drop=True, inplace=True)
     return dataf
@@ -130,4 +131,11 @@ def _hh_fraction_working(dataf):
     dataf['hh_frac_working'] = frac
 
     dataf.drop('working', axis=1, inplace=True)
+    return dataf
+
+def _hh_age_youngest(dataf):
+    dataf = dataf.copy()
+
+    smallest_age = dataf.groupby(level=['year', 'hid'])['age'].min()
+    dataf['hh_youngest_age'] = smallest_age
     return dataf
