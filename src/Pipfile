@@ -12,6 +12,7 @@ numba = "*"
 os = "*"
 sklearn = "*"
 importlib = "*"
+pickle = "*"
 
 [requires]
 python_version = "3.8"

@@ -3,11 +3,13 @@ import numpy as np
 import pandas as pd
 from sklearn.neighbors import NearestNeighbors
 
-sim_path = "/Users/christianhilscher/Desktop/dynsim/src/sim/"
+data_path = "/Users/christianhilscher/Desktop/dynsim/src/data_preparation/"
 input_path = "/Users/christianhilscher/Desktop/dynsim/input/"
-os.chdir(sim_path)
+sim_path = "/Users/christianhilscher/Desktop/dynsim/src/sim/"
 
+os.chdir(data_path)
 from data_prep import SOEP_to_df
+os.chdir(sim_path)
 
 
 df_base = pd.read_stata(input_path + 'SOEP_prepared_costs_2019-11-27_restricted.dta')
