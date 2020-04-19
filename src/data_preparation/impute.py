@@ -21,7 +21,10 @@ df1['heizkosten'] = df1['heizkosten'].fillna(df1.groupby('pid')['heizkosten'].tr
 df1['bruttokaltmiete'] = df1['bruttokaltmiete'].fillna(df1.groupby('pid')['bruttokaltmiete'].transform('median'))
 
 # Setting hours to zero if not participating on labor market
-df1.loc[df1['lfs'] == 0, 'whours_usual'] = 0
-df1.loc[df1['lfs'] == 0, 'whours_actual'] = 0
+df1.drop('whours_usual',axis=1, inplace=True)
+df1.loc[df1['lfs'] == 0, 'hours'] = 0
+
+df1.loc[df1['age']>18, 'child'] = 0
+
 
 df1.to_pickle(input_path + 'imputed')

@@ -24,7 +24,9 @@ def SOEP_to_df(dataf):
                                   'kaltmiete': 'bruttokaltmiete',
                                   'kind': 'child',
                                   'pgpsbil': 'education',
-                                  'married_h': 'married'})
+                                  'married_h': 'married',
+                                  'whours_actual': 'hours'
+                                  })
 
     dataf['orighid'] = dataf['hid']
     # For now motherpid is 0 as a placeholder and maximum age is set to 99
@@ -115,7 +117,7 @@ def make_hh_vars(dataf):
     dataf = _hh_income(dataf)
     dataf = _hh_age_youngest(dataf)
     dataf = _hh_fraction_working(dataf)
-    dataf.reset_index(drop=True, inplace=True)
+    dataf.reset_index(inplace=True, drop=True)
     return dataf
 
 

@@ -13,6 +13,7 @@ os = "*"
 sklearn = "*"
 importlib = "*"
 pickle = "*"
+seaborn = "*"
 
 [requires]
 python_version = "3.8"

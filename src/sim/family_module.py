@@ -48,14 +48,16 @@ def _matching(females, males, number):
     # Looping since as soon as one couple matched, that woman is no longer available
     for i in np.arange(len(lucky_guys)):
         neigh.fit(partners[['age',
-                            'gross_earnings',
                             'education',
-                            'employment_status']])
+                            'migback',
+                            'east',
+                            'n_children']])
         bachelor = lucky_guys.iloc[i,:]
         bachelor = bachelor[['age',
-                             'gross_earnings',
                              'education',
-                             'employment_status']].to_numpy().reshape(1,-1)
+                             'migback',
+                             'east',
+                             'n_children']].to_numpy().reshape(1,-1)
 
         partner_choice = neigh.kneighbors(bachelor)
 
@@ -113,7 +115,7 @@ def _adjust_values(females, males):
 
     return females, males
 
-def _separations(dataf):
+def separations(dataf):
     """
     Calculates the seperations in each period.
     Only those who are married or in a relationship (in_couple) can separate
@@ -136,7 +138,7 @@ def _separations(dataf):
 
     return dataf, separations_this_period
 
-def _marriage(dataf):
+def marriage(dataf):
     """
     10% of all couples get married
     """

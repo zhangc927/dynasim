@@ -126,9 +126,41 @@ def _data_general(dataf, dep_var):
                  'orighid',
                  'age_max']
 
-    dataf_out = dataf.drop(vars_drop, axis=1)
+    dataf.drop(vars_drop, axis=1, inplace=True)
 
-    return dataf_out
+    dataf = _boenke_style_vars(dataf, dep_var)
+
+    return dataf
+
+def _boenke_style_vars(dataf, dep_var):
+    dataf = dataf.copy()
+
+    if dep_var == 'lfs':
+        dataf.drop(['working',
+                    'fulltime',
+                    'whours_actual',
+                    'gross_earnings'],
+                   axis=1,
+                   inplace=True)
+    elif dep_var == 'working':
+        dataf.drop(['fulltime',
+                    'whours_actual',
+                    'gross_earnings'],
+                   axis=1,
+                   inplace=True)
+    elif dep_var == 'fulltime':
+        dataf.drop(['whours_actual',
+                    'gross_earnings'],
+                   axis=1,
+                   inplace=True)
+    elif dep_var == 'whours_actual':
+        dataf.drop(['gross_earnings'],
+                   axis=1,
+                   inplace=True)
+    else:
+        pass
+    dataf.drop(dep_var, axis=1, inplace=True)
+    return dataf
 
 def _estimate(dataf, dep_var, type):
     dataf = dataf.copy()
@@ -147,7 +179,7 @@ def _estimate(dataf, dep_var, type):
                   'bagging_fraction': [0.8],
                   'bagging_freq': [5],
                   'verbose' : 5}
-    else:
+    elif type == 'classifier':
         dict = _prepare_classifier(dataf)
         params = {'task' : 'train',
                   'boosting_type' : 'gbdt',
@@ -155,6 +187,17 @@ def _estimate(dataf, dep_var, type):
                   'objective': 'multiclass',
                   'num_class': len(dict['y_train'].unique()),
                   'eval_metric': 'multi_logloss',
+                  'learning_rate': 0.05,
+                  'feature_fraction': [0.9],
+                  'num_leaves': 31,
+                  'verbose': 0}
+    else:
+        dict = _prepare_classifier(dataf)
+        params = {'task' : 'train',
+                  'boosting_type' : 'gbdt',
+                  'n_estimators': 350,
+                  'objective': 'binary',
+                  'eval_metric': 'logloss',
                   'learning_rate': 0.05,
                   'feature_fraction': [0.9],
                   'num_leaves': 31,
@@ -170,8 +213,10 @@ def _estimate(dataf, dep_var, type):
 
 
 df = pd.read_pickle(input_path + "imputed")
-
-_estimate(df, 'gross_earnings', 'regression')
+df.drop('whours_usual', axis=1,inplace=True)
+# For now follwoing exactly the approach by Bönke
+_estimate(df, 'lfs', 'binary')
+_estimate(df, 'working', 'binary')
+_estimate(df, 'fulltime', 'binary')
 _estimate(df, 'whours_actual', 'regression')
-_estimate(df, 'lfs', 'classification')
-_estimate(df, 'employment_status', 'classification')
+_estimate(df, 'gross_earnings', 'regression')
