@@ -27,4 +27,7 @@ df1.loc[df1['lfs'] == 0, 'hours'] = 0
 df1.loc[df1['age']>18, 'child'] = 0
 
 
+df1['birth'] = 0
+df1.loc[(df1['hh_youngest_age']==0) & (df1['female']==1) & (df1['child']==0), 'birth'] = 1
+
 df1.to_pickle(input_path + 'imputed')

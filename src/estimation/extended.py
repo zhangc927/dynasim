@@ -9,32 +9,40 @@ from sklearn.model_selection import train_test_split
 
 import lightgbm as lgb
 
-import matplotlib.pyplot as plt
-
-data_path = "/Users/christianhilscher/Desktop/dynsim/src/data_preparation/"
 input_path = "/Users/christianhilscher/Desktop/dynsim/input/"
 model_path = "/Users/christianhilscher/desktop/dynsim/src/estimation/models/"
 
-# General functions
-def _shift_variables(dataf, vars, delta, replace=1):
+def getdf(dataf):
     dataf = dataf.copy()
 
-    dataf.sort_values(by=["pid", "year"])
-    dups = dataf["pid"].duplicated()
+    condition = dataf.groupby('pid')['year'].count()>2
+    dataf = dataf.set_index('pid')[condition]
+    year_list = dataf['year'].unique()
 
-    col_names = [i+"_t-"+str(delta) for i in vars]
-    dataf[col_names] = dataf[vars].shift(-(delta))
+    dataf['hours_t1'] = np.NaN
+    dataf['gross_earnings_t1'] = np.NaN
 
-    dups = dups.shift(-(delta))[:-(delta)]
-    dups.reset_index(drop=True, inplace=True)
+    dataf_out = pd.DataFrame()
+    for i in year_list[2:]:
+        df_now = dataf[dataf['year'] == i].copy()
+        df_yesterday = dataf[dataf['year'] == (i-1)].copy()
+        df_twoyesterdays = dataf[dataf['year'] == (i-2)].copy()
 
-    dataf = dataf[:-(delta)]
-    dataf.reset_index(drop=True, inplace=True)
-    dataf = dataf[dups]
+        df_now['lfs_t1'] = df_yesterday['lfs']
+        df_now['working_t1'] = df_yesterday['working']
+        df_now['fulltime_t1'] = df_yesterday['fulltime']
+        df_now['hours_t1'] = df_yesterday['hours']
+        df_now['hours_t2'] = df_twoyesterdays['hours']
+        df_now['gross_earnings_t1'] = df_yesterday['gross_earnings']
+        df_now['gross_earnings_t2'] = df_twoyesterdays['gross_earnings']
 
-    return dataf
+        dataf_out = pd.concat([dataf_out, df_now])
 
-def _get_dependent_var(dataf, dep_var):
+    dataf_out.reset_index(inplace=True)
+    dataf_out.dropna(inplace=True)
+    return dataf_out
+
+def get_dependent_var(dataf, dep_var):
     dataf = dataf.copy()
 
     dataf.sort_values(by=["pid", "year"])
@@ -43,7 +51,7 @@ def _get_dependent_var(dataf, dep_var):
     dataf["dep_var"] = dataf[dep_var].shift(-1)
 
     dups = dups.shift(-1)[:-1]
-    dups.reset_index(drop=True)
+    dups.reset_index(drop=True, inplace=True)
 
     dataf = dataf[:-1]
     dataf.reset_index(drop=True, inplace=True)
@@ -58,14 +66,14 @@ def _prepare_classifier(dataf):
     X = dataf.drop('dep_var', axis=1)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.05)
 
-    X_train = StandardScaler().fit_transform(np.asarray(X_train))
-    X_test = StandardScaler().fit_transform(np.asarray(X_test))
+    X_train_scaled = StandardScaler().fit_transform(np.asarray(X_train))
+    X_test_scaled = StandardScaler().fit_transform(np.asarray(X_test))
 
     feature_names = X.columns.tolist()
 
     # For ML part:
-    lgb_train = lgb.Dataset(X_train, y_train, free_raw_data=False)
-    lgb_test = lgb.Dataset(X_test, y_test, free_raw_data=False)
+    lgb_train = lgb.Dataset(X_train_scaled, y_train, free_raw_data=False)
+    lgb_test = lgb.Dataset(X_test_scaled, y_test, free_raw_data=False)
 
     out_dici = {'X_train': X_train,
                 'X_test': X_test,
@@ -83,21 +91,24 @@ def _prepare_regressor(dataf):
         X = dataf.drop('dep_var', axis=1)
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.05)
 
-        X_train = StandardScaler().fit_transform(np.asarray(X_train))
-        X_test = StandardScaler().fit_transform(np.asarray(X_test))
-        y_train = StandardScaler().fit_transform(np.asarray(y_train).reshape(-1,1))
+        X_train_scaled = StandardScaler().fit_transform(np.asarray(X_train))
+        X_test_scaled = StandardScaler().fit_transform(np.asarray(X_test))
+        y_train_scaled = StandardScaler().fit_transform(np.asarray(y_train).reshape(-1,1))
 
         # Saving the scaler of the test data to convert the predicted values again
         y_test_scaler = StandardScaler().fit(np.asarray(y_test).reshape(-1,1))
-        y_test = y_test_scaler.transform(np.asarray(y_test).reshape(-1,1))
+        y_test_scaled = y_test_scaler.transform(np.asarray(y_test).reshape(-1,1))
 
         feature_names = X.columns.tolist()
-        y_test = np.ravel(y_test)
-        y_train = np.ravel(y_train)
+        y_test_scaled = np.ravel(y_test_scaled)
+        y_train_scaled = np.ravel(y_train_scaled)
 
         # For ML part:
-        lgb_train = lgb.Dataset(X_train, y_train, free_raw_data=False)
-        lgb_test = lgb.Dataset(X_test, y_test, free_raw_data=False)
+        lgb_train = lgb.Dataset(X_train_scaled,
+                                y_train_scaled, free_raw_data=False)
+        lgb_test = lgb.Dataset(X_test_scaled,
+                               y_test_scaled, free_raw_data=False)
+
 
         out_dici = {'X_train': X_train,
                     'X_test': X_test,
@@ -109,64 +120,30 @@ def _prepare_regressor(dataf):
                     'features': feature_names}
         return out_dici
 
-# Functions for estimating
-def _data_general(dataf, dep_var):
+#############################################################################
+
+def data_general(dataf, dep_var=None, estimate=1):
     dataf = dataf.copy()
 
-    dataf = _get_dependent_var(dataf, dep_var)
 
-    vars_shift = ['gross_earnings',
-                  'whours_actual',
-                  'employment_status',
-                  'hh_income']
-    dataf = _shift_variables(dataf, vars_shift, 1, replace=0)
+    if estimate == 1:
+        dataf = get_dependent_var(dataf, dep_var)
+    else:
+        pass
 
     vars_drop = ['pid',
                  'hid',
                  'orighid',
                  'age_max']
-
     dataf.drop(vars_drop, axis=1, inplace=True)
-
-    dataf = _boenke_style_vars(dataf, dep_var)
-
-    return dataf
-
-def _boenke_style_vars(dataf, dep_var):
-    dataf = dataf.copy()
-
-    if dep_var == 'lfs':
-        dataf.drop(['working',
-                    'fulltime',
-                    'whours_actual',
-                    'gross_earnings'],
-                   axis=1,
-                   inplace=True)
-    elif dep_var == 'working':
-        dataf.drop(['fulltime',
-                    'whours_actual',
-                    'gross_earnings'],
-                   axis=1,
-                   inplace=True)
-    elif dep_var == 'fulltime':
-        dataf.drop(['whours_actual',
-                    'gross_earnings'],
-                   axis=1,
-                   inplace=True)
-    elif dep_var == 'whours_actual':
-        dataf.drop(['gross_earnings'],
-                   axis=1,
-                   inplace=True)
-    else:
-        pass
-    dataf.drop(dep_var, axis=1, inplace=True)
     return dataf
 
 def _estimate(dataf, dep_var, type):
     dataf = dataf.copy()
 
-    dataf = _data_general(dataf, dep_var)
+    dataf = data_general(dataf, dep_var)
     dataf.dropna(inplace=True)
+
     if type == 'regression':
         dict = _prepare_regressor(dataf)
         params = {'boosting_type' : 'gbdt',
@@ -209,14 +186,18 @@ def _estimate(dataf, dep_var, type):
                      feature_name = dict['features'],
                      early_stopping_rounds = 5)
 
-    modl.save_model(model_path + dep_var + "_extended.txt")
+    if dep_var == 'gross_earnings':
+        modl.save_model(model_path + "earnings_extended.txt")
+    else:
+        modl.save_model(model_path + dep_var + "_extended.txt")
 
 
-df = pd.read_pickle(input_path + "imputed")
-df.drop('whours_usual', axis=1,inplace=True)
-# For now follwoing exactly the approach by Bönke
-_estimate(df, 'lfs', 'binary')
-_estimate(df, 'working', 'binary')
-_estimate(df, 'fulltime', 'binary')
-_estimate(df, 'whours_actual', 'regression')
-_estimate(df, 'gross_earnings', 'regression')
+# df = pd.read_pickle(input_path + 'imputed').dropna()
+# df1 = getdf(df)
+#
+# _estimate(df1, 'birth', 'binary')
+# _estimate(df1, 'lfs', 'binary')
+# _estimate(df1, 'working', 'binary')
+# _estimate(df1, 'fulltime', 'binary')
+# _estimate(df1, 'hours', 'regression')
+# _estimate(df1, 'gross_earnings', 'regression')

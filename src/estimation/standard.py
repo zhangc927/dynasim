@@ -120,6 +120,68 @@ def _prepare_regressor(dataf):
                     'features': feature_names}
         return out_dici
 ##############################################################################
+def data_birth(dataf, estimate=1):
+    dataf = dataf.copy()
+    dataf = dataf[(dataf['female']==1) & (dataf['child']==0)]
+
+    if estimate == 1:
+        dataf= get_dependent_var(dataf, 'birth')
+        vars_retain = ['dep_var',
+                       'lfs_t1',
+                       'education',
+                       'age',
+                       'in_couple',
+                       'married',
+                       'n_children',
+                       'hh_youngest_age',
+                       'hh_income',
+                       'hh_frac_working']
+    elif estimate == 0:
+        vars_retain = ['lfs_t1',
+                       'education',
+                       'age',
+                       'in_couple',
+                       'married',
+                       'n_children',
+                       'hh_youngest_age',
+                       'hh_income',
+                       'hh_frac_working']
+    else:
+        raise ValueError("0 is for simulation, 1 for estimation")
+
+    dataf_out = dataf[vars_retain]
+    return dataf_out
+
+def estimate_birth(dataf):
+    dataf = dataf.copy()
+
+    dataf = data_birth(dataf)
+    dataf.dropna(inplace=True)
+    dict = _prepare_classifier(dataf)
+
+    params_m = {'task' : 'train',
+        'boosting_type' : 'gbdt',
+        'n_estimators': 350,
+        'objective': 'binary',
+        'eval_metric': 'logloss',
+        'learning_rate': 0.05,
+        'feature_fraction': [0.9],
+        'num_leaves': 31,
+        'verbose': 0}
+
+    logit = LogisticRegression().fit(dict['X_train'],
+                                         dict['y_train'])
+
+    ml = lgb.train(params_m,
+                   train_set = dict['lgb_train'],
+                   valid_sets = dict['lgb_test'],
+                   feature_name = dict['features'],
+                   early_stopping_rounds = 5)
+
+    pickle.dump(logit,
+                open(model_path + "birth_logit", 'wb'))
+    ml.save_model(model_path + "birth_ml.txt")
+
 
 def data_lfs(dataf, estimate=1):
     dataf = dataf.copy()
@@ -418,7 +480,7 @@ def estimate_earnings(dataf):
                 open(model_path + "earnings_ols", 'wb'))
     ml.save_model(model_path + "earnings_ml.txt")
 
-#
+
 # df = pd.read_pickle(input_path + 'imputed').dropna()
 # df1 = getdf(df)
 #
@@ -427,3 +489,4 @@ def estimate_earnings(dataf):
 # estimate_fulltime(df1)
 # estimate_hours(df1)
 # estimate_earnings(df1)
+# estimate_birth(df1)
