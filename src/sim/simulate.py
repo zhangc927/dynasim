@@ -9,16 +9,13 @@ sns.set(style="darkgrid")
 sim_path = "/Users/christianhilscher/Desktop/dynsim/src/sim/"
 estimation_path = "/Users/christianhilscher/desktop/dynsim/src/estimation/"
 input_path = "/Users/christianhilscher/Desktop/dynsim/input/"
-model_path = "/Users/christianhilscher/desktop/dynsim/src/estimation/models/04/"
-
-current_week = 17
-output_path = "/Users/christianhilscher/desktop/dynsim/output/week" + str(current_week) + "/"
+model_path = "/Users/christianhilscher/desktop/dynsim/src/estimation/models/"
 
 cwd = os.getcwd()
 ##############################################################################
 os.chdir(sim_path)
-from family_module08 import separations, marriage, dating_market, birth
-from work_module08 import sim_lfs, sim_working, sim_fulltime, sim_hours, sim_earnings, scale_data, make_hh_vars
+from family_module import separations, marriage, dating_market, birth, death
+from work_module import sim_lfs, sim_working, sim_fulltime, sim_hours, sim_earnings, scale_data, make_hh_vars
 
 os.chdir(estimation_path)
 from standard08 import getdf
@@ -103,10 +100,11 @@ def update(dataf):
 def run_family_module(dataf, type):
     dataf = dataf.copy()
 
+    dataf, deaths_this_period = death(dataf)
     dataf, separations_this_period = separations(dataf)
     dataf, marriages_this_period = marriage(dataf)
     dataf, new_couples_this_period = dating_market(dataf)
-    dataf, births_this_period = birth(dataf, type)
+    dataf, births_this_period = birth(dataf)
 
     sudden_nan = np.isnan(dataf).any().any()
     if sudden_nan == True:

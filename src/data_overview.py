@@ -12,17 +12,17 @@ sim_path = "/Users/christianhilscher/Desktop/dynsim/src/sim/"
 estimation_path = "/Users/christianhilscher/desktop/dynsim/src/estimation/"
 input_path = "/Users/christianhilscher/Desktop/dynsim/input/"
 
-current_week = 21
+current_week = 22
 output_path = "/Users/christianhilscher/desktop/dynsim/output/week" + str(current_week) + "/"
 
 if not os.path.exists(output_path):
     os.makedirs(output_path)
 
 os.chdir(sim_path)
-from simulate08 import fill_dataf, predict
+from simulate import fill_dataf, predict
 
 os.chdir(estimation_path)
-from standard08 import getdf
+from standard import getdf
 
 os.chdir(cwd)
 ###############################################################################
@@ -43,15 +43,28 @@ def prep_countbplot(dataf):
 
     return df_counts
 
+
+def make_cohort(dataf):
+    dataf = dataf.copy()
+    birthyear = dataf['year'] - dataf['age']
+
+    condition = birthyear.isin([1954, 1955, 1956, 1957, 1958])
+    dataf = dataf[condition]
+    return dataf
 ###############################################################################
 ###############################################################################
 df = pd.read_pickle(input_path + 'not_imputed08').dropna()
 df1 = getdf(df)
+df2 = make_cohort(df1)
+
 
 df_use = df1.copy()
-
+len(df1['pid'].unique())
 
 
 
 a = prep_countbplot(df_use)
 b = sns.barplot(x='year', y='relative', data=a, palette="Blues_d")
+b.set_title('n=22359')
+fig = b.get_figure()
+fig.savefig(output_path + "duration.png")

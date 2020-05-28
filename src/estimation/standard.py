@@ -12,7 +12,7 @@ import lightgbm as lgb
 from sklearn.linear_model import LogisticRegression, LinearRegression
 
 input_path = "/Users/christianhilscher/Desktop/dynsim/input/"
-model_path = "/Users/christianhilscher/desktop/dynsim/src/estimation/models/04/"
+model_path = "/Users/christianhilscher/desktop/dynsim/src/estimation/models/"
 
 def getdf(dataf):
     dataf = dataf.copy()
@@ -85,8 +85,10 @@ def _prepare_classifier(dataf):
     X_test = sm.add_constant(X_test)
 
     # For ML part:
-    lgb_train = lgb.Dataset(X_train_scaled, y_train)
-    lgb_test = lgb.Dataset(X_test_scaled, y_test)
+    lgb_train = lgb.Dataset(X_train_scaled, y_train,
+                            weight = weights_train)
+    lgb_test = lgb.Dataset(X_test_scaled, y_test,
+                           weight = weights_test)
 
     out_dici = {'X_train': X_train_scaled,
                 'X_test': X_test_scaled,
@@ -130,10 +132,10 @@ def _prepare_regressor(dataf):
     X_test = sm.add_constant(X_test)
 
     # For ML part:
-    lgb_train = lgb.Dataset(X_train_scaled,
-                            y_train)
-    lgb_test = lgb.Dataset(X_test_scaled,
-                           y_test)
+    lgb_train = lgb.Dataset(X_train_scaled, y_train,
+                            weight = weights_train)
+    lgb_test = lgb.Dataset(X_test_scaled, y_test,
+                           weight = weights_test)
 
 
     out_dici = {'X_train': X_train_scaled,

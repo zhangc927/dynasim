@@ -10,16 +10,32 @@ from sklearn.neighbors import NearestNeighbors
 ##############################################################################
 ##############################################################################
 input_path = "/Users/christianhilscher/Desktop/dynsim/input/"
-model_path = "/Users/christianhilscher/desktop/dynsim/src/estimation/models/04/"
+model_path = "/Users/christianhilscher/desktop/dynsim/src/estimation/models/"
 estimation_path = "/Users/christianhilscher/desktop/dynsim/src/estimation/"
 sim_path = "/Users/christianhilscher/desktop/dynsim/src/sim/"
 
 os.chdir(estimation_path)
-from standard08 import data_birth
-from extended08 import data_general
+from standard import data_birth
+from extended import data_general
 
 os.chdir(sim_path)
 
+###
+mortality = pd.read_csv(input_path + "mortality")
+fertility = pd.read_csv(input_path + "fertility")
+###
+
+
+def death(dataf):
+    dataf = dataf.copy()
+
+    deaths = np.zeros(len(dataf))
+    deaths[dataf['age']>dataf['age_max']] = 1
+    if np.sum(deaths)>0:
+        dataf.drop(deaths, inplace=True)
+    else:
+        pass
+    return dataf, np.sum(deaths)
 
 
 def dating_market(dataf):
@@ -38,17 +54,20 @@ def dating_market(dataf):
     new_couples = round(0.1 * min(len(female_singles),
                                   len(male_singles)))
 
-    matching_dict = _matching(female_singles,
-                              male_singles,
-                              new_couples)
+    if new_couples>0:
+        matching_dict = _matching(female_singles,
+                                  male_singles,
+                                  new_couples)
 
-    dataf_out = pd.concat((not_single,
-                           matching_dict['girls'],
-                           matching_dict['guys']), axis=0)
+        dataf_out = pd.concat((not_single,
+                               matching_dict['girls'],
+                               matching_dict['guys']), axis=0)
 
-    assert(
-        len(matching_dict['girls']) == len(female_singles)
-    ), 'Lenght of dataframe is not the same as before'
+        assert(
+            len(matching_dict['girls']) == len(female_singles)
+        ), 'Lenght of dataframe is not the same as before'
+    else:
+        dataf_out = dataf
 
     return dataf_out, new_couples
 
@@ -176,7 +195,7 @@ def sim_birth(dataf, type):
     dataf = dataf.copy()
 
     if type == 'ext':
-        X = data_general(dataf, dep_var='birth', estimate=0)
+        X = data_general(dataf, 'birth', estimate=0)
         predictions = _ext(X, 'birth')
     elif type == 'standard':
         X = data_birth(dataf, estimate=0)
@@ -225,16 +244,25 @@ def make_new_humans(dataf):
     df_babies[settozero] = 0
     return df_babies, n_babies
 
-def birth(dataf, type):
+def birth(dataf):
     dataf = dataf.copy()
 
-    births = sim_birth(dataf[(dataf['female']==1) &  \
-                             (dataf['child']==0)],
-                       type)
+    df_possible = dataf[(dataf['female']==1) &  \
+                             (dataf['child']==0) & \
+                             (15 <= dataf['age']) & \
+                             (dataf['age'] <= 49)]
 
-    dataf.loc[(dataf['female']==1) & \
-              (dataf['child']==0), 'birth'] = births
+    df_merged = df_possible.merge(fertility, left_on='age', right_on='Age')
 
+    probs = np.random.uniform(size=len(df_possible))
+    df_merged['birth'] = 0
+
+    cond = df_merged['1968']/1000 < probs
+    df_merged.loc[cond, 'birth']=1
+    df_merged.drop(['1968', 'Age'], axis=1, inplace=True)
+
+    dataf_babies = df_merged[df_merged['birth']==1]
+    births_this_period = sum(cond)
 
     dataf_babies, births_this_period = make_new_humans(dataf)
 

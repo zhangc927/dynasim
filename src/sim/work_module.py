@@ -9,13 +9,13 @@ from sklearn.preprocessing import StandardScaler
 ##############################################################################
 ##############################################################################
 input_path = "/Users/christianhilscher/Desktop/dynsim/input/"
-model_path = "/Users/christianhilscher/desktop/dynsim/src/estimation/models/04/"
+model_path = "/Users/christianhilscher/desktop/dynsim/src/estimation/models/"
 estimation_path = "/Users/christianhilscher/desktop/dynsim/src/estimation/"
 sim_path = "/Users/christianhilscher/desktop/dynsim/src/sim/"
 
 os.chdir(estimation_path)
-from standard08 import getdf, data_lfs, data_working, data_fulltime, data_hours, data_earnings
-from extended08 import data_general
+from standard import getdf, data_lfs, data_working, data_fulltime, data_hours, data_earnings
+from extended import data_general
 os.chdir(sim_path)
 ##############################################################################
 ##############################################################################
@@ -85,8 +85,9 @@ def _ext(X, variable):
 
     if variable in ['hours', 'earnings']:
         # Inverse transform regression results
-        scaler = pd.read_pickle(model_path + variable + "_scaler")
-        pred_scaled = scaler.inverse_transform(pred)
+        pred_scaled = pred
+        # scaler = pd.read_pickle(model_path + variable + "_scaler")
+        # pred_scaled = scaler.inverse_transform(pred)
     else:
         # Make binary prediction to straight 0 and 1
         pred_scaled = np.zeros(len(pred))
@@ -94,7 +95,7 @@ def _ext(X, variable):
 
     pred_scaled[pred_scaled<0] = 0
     return pred_scaled
-
+###############################################################################
 # Making household wide variables
 def make_hh_vars(dataf):
     dataf = dataf.copy()

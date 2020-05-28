@@ -10,7 +10,7 @@ from sklearn.model_selection import train_test_split
 import lightgbm as lgb
 
 input_path = "/Users/christianhilscher/Desktop/dynsim/input/"
-model_path = "/Users/christianhilscher/desktop/dynsim/src/estimation/models/04/"
+model_path = "/Users/christianhilscher/desktop/dynsim/src/estimation/models/"
 
 def getdf(dataf):
     dataf = dataf.copy()
@@ -53,67 +53,96 @@ def _prepare_classifier(dataf):
 
     y = dataf['dep_var']
     X = dataf.drop('dep_var', axis=1)
+
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.05)
 
+    # Making weights
+    weights_train = X_train['personweight']
+    #X_train.drop('personweight', axis=1, inplace=True)
+
+    weights_test = X_test['personweight']
+    #X_test.drop('personweight', axis=1, inplace=True)
+
+
+    if "personweight_interacted" in X.columns.tolist():
+        X_train.drop('personweight_interacted', axis=1, inplace=True)
+        X_test.drop('personweight_interacted', axis=1, inplace=True)
+    else:
+        pass
+
+    # Scaling
     X_train_scaled = StandardScaler().fit_transform(np.asarray(X_train))
     X_test_scaled = StandardScaler().fit_transform(np.asarray(X_test))
 
-    feature_names = X.columns.tolist()
+    # Coeffs feature_names
+    feature_names = X_train.columns.tolist()
 
     # For ML part:
-    lgb_train = lgb.Dataset(X_train_scaled, y_train, free_raw_data=False)
-    lgb_test = lgb.Dataset(X_test_scaled, y_test, free_raw_data=False)
+    lgb_train = lgb.Dataset(X_train_scaled, y_train,
+                            weight = weights_train)
+    lgb_test = lgb.Dataset(X_test_scaled, y_test,
+                           weight = weights_test)
 
-    out_dici = {'X_train': X_train,
-                'X_test': X_test,
+    out_dici = {'X_train': X_train_scaled,
+                'X_test': X_test_scaled,
                 'y_train': y_train,
                 'y_test': y_test,
                 'lgb_train': lgb_train,
                 'lgb_test': lgb_test,
-                'features': feature_names}
+                'features': feature_names,
+                'weights': weights_train}
     return out_dici
 
+
 def _prepare_regressor(dataf):
-        dataf = dataf.copy()
+    dataf = dataf.copy()
 
-        y = dataf['dep_var']
-        X = dataf.drop('dep_var', axis=1)
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.05)
+    y = dataf['dep_var']
+    X = dataf.drop('dep_var', axis=1)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.05)
 
-        X_train_scaled = StandardScaler().fit_transform(np.asarray(X_train))
-        X_test_scaled = StandardScaler().fit_transform(np.asarray(X_test))
-        y_train_scaled = StandardScaler().fit_transform(np.asarray(y_train).reshape(-1,1))
+    # Making weights
+    weights_train = X_train['personweight']
+    #X_train.drop('personweight', axis=1, inplace=True)
 
-        # Saving the scaler of the test data to convert the predicted values again
-        y_test_scaler = StandardScaler().fit(np.asarray(y_test).reshape(-1,1))
-        y_test_scaled = y_test_scaler.transform(np.asarray(y_test).reshape(-1,1))
+    weights_test = X_test['personweight']
+    #X_test.drop('personweight', axis=1, inplace=True)
 
-        feature_names = X.columns.tolist()
-        y_test_scaled = np.ravel(y_test_scaled)
-        y_train_scaled = np.ravel(y_train_scaled)
+    # Scaling
+    X_train_scaled = StandardScaler().fit_transform(np.asarray(X_train))
+    X_test_scaled = StandardScaler().fit_transform(np.asarray(X_test))
+    y_train_scaled = StandardScaler().fit_transform(np.asarray(y_train).reshape(-1,1))
 
-        # For ML part:
-        lgb_train = lgb.Dataset(X_train_scaled,
-                                y_train_scaled, free_raw_data=False)
-        lgb_test = lgb.Dataset(X_test_scaled,
-                               y_test_scaled, free_raw_data=False)
+    # Saving the scaler of the test data to convert the predicted values again
+    y_test_scaler = StandardScaler().fit(np.asarray(y_test).reshape(-1,1))
+    y_test_scaled = y_test_scaler.transform(np.asarray(y_test).reshape(-1,1))
+
+    feature_names = X_train.columns.tolist()
+    y_test_scaled = np.ravel(y_test_scaled)
+    y_train_scaled = np.ravel(y_train_scaled)
+
+    # For ML part:
+    lgb_train = lgb.Dataset(X_train_scaled, y_train,
+                            weight = weights_train)
+    lgb_test = lgb.Dataset(X_test_scaled, y_test,
+                           weight = weights_test)
 
 
-        out_dici = {'X_train': X_train,
-                    'X_test': X_test,
-                    'y_train': y_train,
-                    'y_test': y_test,
-                    'scaler': y_test_scaler,
-                    'lgb_train': lgb_train,
-                    'lgb_test': lgb_test,
-                    'features': feature_names}
-        return out_dici
+    out_dici = {'X_train': X_train_scaled,
+                'X_test': X_test,
+                'y_train': y_train_scaled,
+                'y_test': y_test,
+                'scaler': y_test_scaler,
+                'lgb_train': lgb_train,
+                'lgb_test': lgb_test,
+                'features': feature_names,
+                'weights': weights_train}
+    return out_dici
 
 #############################################################################
 
 def data_general(dataf, dep_var, estimate=1):
     dataf = dataf.copy()
-
 
     if estimate == 1:
         dataf = get_dependent_var(dataf, dep_var)
@@ -124,8 +153,15 @@ def data_general(dataf, dep_var, estimate=1):
     vars_drop = ['pid',
                  'hid',
                  'orighid',
-                 'age_max']
-    dataf.drop(vars_drop, axis=1, inplace=True)
+                 'age_max',
+                 'predicted']
+
+    for var in vars_drop:
+        if var in dataf.columns.tolist():
+            dataf.drop(var, axis=1, inplace=True)
+        else:
+            pass
+
     return dataf
 
 def _estimate(dataf, dep_var, type):
@@ -146,7 +182,18 @@ def _estimate(dataf, dep_var, type):
                   'bagging_fraction': [0.8],
                   'bagging_freq': [5],
                   'verbose' : 5}
-    elif type == 'classifier':
+    elif type == 'binary':
+            dict = _prepare_classifier(dataf)
+            params = {'task' : 'train',
+                'boosting_type' : 'gbdt',
+                'n_estimators': 350,
+                'objective': 'binary',
+                'eval_metric': 'logloss',
+                'learning_rate': 0.05,
+                'feature_fraction': [0.9],
+                'num_leaves': 31,
+                'verbose': 0}
+    else:
         dict = _prepare_classifier(dataf)
         params = {'task' : 'train',
                   'boosting_type' : 'gbdt',
@@ -158,23 +205,11 @@ def _estimate(dataf, dep_var, type):
                   'feature_fraction': [0.9],
                   'num_leaves': 31,
                   'verbose': 0}
-    else:
-        dict = _prepare_classifier(dataf)
-        params = {'task' : 'train',
-                  'boosting_type' : 'gbdt',
-                  'n_estimators': 350,
-                  'objective': 'binary',
-                  'eval_metric': 'logloss',
-                  'learning_rate': 0.05,
-                  'feature_fraction': [0.9],
-                  'num_leaves': 31,
-                  'verbose': 0}
 
     modl = lgb.train(params,
                      train_set = dict['lgb_train'],
                      valid_sets = dict['lgb_test'],
-                     feature_name = dict['features'],
-                     early_stopping_rounds = 5)
+                     feature_name = dict['features'])
 
     if dep_var == 'gross_earnings':
         modl.save_model(model_path + "earnings_extended.txt")
@@ -184,11 +219,11 @@ def _estimate(dataf, dep_var, type):
 
 # df = pd.read_pickle(input_path + 'imputed08').dropna()
 # df1 = getdf(df)
-# df1['predicted'] = 1
 #
-# _estimate(df1, 'birth', 'binary')
 # _estimate(df1, 'lfs', 'binary')
 # _estimate(df1, 'working', 'binary')
 # _estimate(df1, 'fulltime', 'binary')
 # _estimate(df1, 'hours', 'regression')
 # _estimate(df1, 'gross_earnings', 'regression')
+# _estimate(df1, 'birth', 'binary')
+# _estimate(df1, 'employment_status', 'multiclass')
