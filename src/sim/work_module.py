@@ -20,11 +20,11 @@ os.chdir(sim_path)
 ##############################################################################
 ##############################################################################
 
+# Functions used for predicting values
 def scale_data(dataf, dep_var=None):
     dataf = dataf.copy()
     X = StandardScaler().fit_transform(np.asarray(dataf))
     return X
-##############################################################################
 
 def _logit(X, variable):
     X= X.copy()

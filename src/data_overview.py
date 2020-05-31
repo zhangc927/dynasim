@@ -58,12 +58,7 @@ df1 = getdf(df)
 df2 = make_cohort(df1)
 
 
-df_use = df1.copy()
-len(df1['pid'].unique())
-
-
-
-a = prep_countbplot(df_use)
+a = prep_countbplot(df1)
 b = sns.barplot(x='year', y='relative', data=a, palette="Blues_d")
 b.set_title('n=22359')
 fig = b.get_figure()

@@ -215,6 +215,9 @@ def scale_data(dataf):
     return X, scaler
 
 def make_new_humans(dataf):
+    """
+    Takes the mother's values and adjust some of them accordingly (setting age=0 for example)
+    """
     dataf = dataf.copy()
 
     df_babies = dataf[dataf['birth'] == 1].copy()
@@ -245,6 +248,9 @@ def make_new_humans(dataf):
     return df_babies, n_babies
 
 def birth(dataf):
+    """
+    Determines who gets children and then generates a new DF containing the old one plus the infants
+    """
     dataf = dataf.copy()
 
     df_possible = dataf[(dataf['female']==1) &  \

@@ -24,6 +24,7 @@ from standard import getdf
 os.chdir(cwd)
 
 ##############################################################################
+# Functions for plotting - have to outsource them
 def prepare_ownplots(orig_data, filled_dici, variable):
 
 
@@ -123,7 +124,7 @@ abc = fill_dataf(df1)
 var_list = ['lfs', 'working', 'fulltime', 'hours', 'gross_earnings', 'birth', 'married']
 oecd_data = prepare_oecdplots()
 
-
+# Plotting
 for variable in var_list:
     vals = prepare_plots(df1, abc, variable, oecd_data)
 

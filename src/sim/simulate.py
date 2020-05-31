@@ -18,7 +18,7 @@ from family_module import separations, marriage, dating_market, birth, death
 from work_module import sim_lfs, sim_working, sim_fulltime, sim_hours, sim_earnings, scale_data, make_hh_vars
 
 os.chdir(estimation_path)
-from standard08 import getdf
+from standard import getdf
 
 os.chdir(cwd)
 ##############################################################################

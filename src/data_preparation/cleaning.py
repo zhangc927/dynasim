@@ -90,7 +90,9 @@ def SOEP_to_df(dataf):
     return dataf
 
 def _numeric_eduation(dataf):
-
+    """
+    Transforms the string variable education to numeric values
+    """
     dataf = dataf.copy()
 
     dataf.loc[:, "educ"] = 0
@@ -108,7 +110,9 @@ def _numeric_eduation(dataf):
     return dataf
 
 def _numeric_employment_status(dataf):
-
+    """
+    Transforms the string variable employment status to numeric values
+    """
     dataf = dataf.copy()
 
     dataf.loc[:, "emp"] = 0
@@ -129,6 +133,9 @@ def _numeric_employment_status(dataf):
 
 
 def _numeric_migration(dataf):
+    """
+    Transforms the string variable migration background to numeric values
+    """
     dataf = dataf.copy()
 
     dataf['migration'] = np.NaN
@@ -142,6 +149,9 @@ def _numeric_migration(dataf):
     return dataf
 
 def _numeric_sex(dataf):
+    """
+    Transforms the string variable gender to numeric values
+    """
     dataf = dataf.copy()
 
     dataf['female'] = np.NaN
@@ -154,6 +164,9 @@ def _numeric_sex(dataf):
     return dataf
 
 def _numeric_married(dataf):
+    """
+    Transforms the string variable married to numeric values
+    """
     dataf = dataf.copy()
 
     married_strings = ['[1] Verheiratet, zusammenlebend',
@@ -289,6 +302,9 @@ def _numeric_hours(dataf):
 
 # Making household wide variables
 def make_hh_vars(dataf):
+    """
+    Generating variables which belong to one household such as HH-income
+    """
     dataf = dataf.copy()
     dataf = _get_multiindex(dataf)
 
@@ -334,6 +350,9 @@ def _hh_children(dataf):
     return dataf
 
 def _hh_fraction_working(dataf):
+    """
+    Returns in % the fraction of adults in a HH working
+    """
     dataf = dataf.copy()
 
     dataf = _hh_size(dataf)
@@ -350,6 +369,10 @@ def _hh_fraction_working(dataf):
     return dataf
 
 def _hh_age_youngest(dataf):
+    """
+    Returns the age of the youngest person in HH
+    Is relevant when it comes to the estimation of the labor force participation of the mothers
+    """
     dataf = dataf.copy()
 
     smallest_age = dataf.groupby(level=['year', 'hid'])['age'].min()
