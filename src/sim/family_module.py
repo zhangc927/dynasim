@@ -9,21 +9,20 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import NearestNeighbors
 ##############################################################################
 ##############################################################################
-input_path = "/Users/christianhilscher/Desktop/dynsim/input/"
 model_path = "/Users/christianhilscher/desktop/dynsim/src/estimation/models/"
 estimation_path = "/Users/christianhilscher/desktop/dynsim/src/estimation/"
 sim_path = "/Users/christianhilscher/desktop/dynsim/src/sim/"
+input_path = "/Users/christianhilscher/Desktop/dynsim/input/"
 
 os.chdir(estimation_path)
 from standard import data_birth
 from extended import data_general
 
 os.chdir(sim_path)
-
-###
+##############################################################################
 mortality = pd.read_csv(input_path + "mortality")
 fertility = pd.read_csv(input_path + "fertility")
-###
+##############################################################################
 
 
 def death(dataf):
@@ -119,6 +118,7 @@ def _concat_singles(dici):
     """
     Concating those who found new partners and those who didn't
     """
+
     unlucky_guys = dici['all_male'][dici['all_male'].index.isin(dici['lucky_guys'].index) == False]
 
     unhappy_girls = dici['all_female'][dici['all_female'].index.isin(dici['happy_girls'].index) == False]
@@ -168,7 +168,7 @@ def separations(dataf):
     males = (condition_separation) & (dataf['female'] == 0)
     dataf.loc[condition_separation, ['married', 'in_couple']] = [[0, 0]]
 
-    # Men moove out; resetting HID
+    # Men move out; resetting HID
     dataf.loc[males, 'orighid'] = dataf.loc[males, 'hid'].copy()
     dataf.loc[males, 'hid'] += np.arange(1, np.sum(males)+1)
 

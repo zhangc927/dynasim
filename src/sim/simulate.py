@@ -9,7 +9,6 @@ sns.set(style="darkgrid")
 sim_path = "/Users/christianhilscher/Desktop/dynsim/src/sim/"
 estimation_path = "/Users/christianhilscher/desktop/dynsim/src/estimation/"
 input_path = "/Users/christianhilscher/Desktop/dynsim/input/"
-model_path = "/Users/christianhilscher/desktop/dynsim/src/estimation/models/"
 
 cwd = os.getcwd()
 ##############################################################################
@@ -86,15 +85,6 @@ def update(dataf):
                       'gross_earnings']
 
     dataf[estimated_vars] = 0
-
-    #dataf = _moving(dataf)
-
-    # sudden_nan = np.isnan(dataf).any().any()
-    # if sudden_nan == True:
-    #     raise ValueError("Having a missing in there somewhere. Type:", type)
-    # else:
-    #     pass
-
     return dataf
 
 def run_family_module(dataf, type):
@@ -105,12 +95,6 @@ def run_family_module(dataf, type):
     dataf, marriages_this_period = marriage(dataf)
     dataf, new_couples_this_period = dating_market(dataf)
     dataf, births_this_period = birth(dataf)
-
-    sudden_nan = np.isnan(dataf).any().any()
-    if sudden_nan == True:
-        raise ValueError("Having a missing in there somewhere. Type:", type)
-    else:
-        pass
 
     out_dici={'dataf' : dataf}
     return out_dici
@@ -123,12 +107,14 @@ def run_work_module(dataf, type):
     lfs = sim_lfs(dataf,type)
     dataf['lfs'] = lfs
 
+    # From now on always conditional on being in the labor force
     if np.sum(lfs)>0:
         working = sim_working(dataf[dataf['lfs'] == 1], type)
     else:
         working = 0
     dataf.loc[dataf['lfs'] == 1, 'working'] = working
 
+    # From now on always conditional on being employed
     if np.sum(working)>0:
         fulltime = sim_fulltime(dataf[dataf['working'] == 1], type)
     else:
@@ -147,11 +133,6 @@ def run_work_module(dataf, type):
         earnings = 0
     dataf.loc[dataf['working'] == 1, 'gross_earnings'] = earnings
 
-    sudden_nan = np.isnan(dataf).any().any()
-    if sudden_nan == True:
-        raise ValueError("Having a missing in there somewhere. Type:", type)
-    else:
-        pass
     return dataf
 ##############################################################################
 ##############################################################################
