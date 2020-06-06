@@ -77,6 +77,7 @@ def SOEP_to_df(dataf):
             'fulltime',
             'lfs',
             'working',
+            'tenure',
             'migback',
             'hh_income',
             'hh_youngest_age',

@@ -252,7 +252,8 @@ def data_lfs(dataf, estimate=1):
                        'working_t1',
                        'n_children',
                        'hh_youngest_age',
-                       'hh_income', 'hh_frac_working',
+                       'hh_income',
+                       'hh_frac_working',
                        'female',
                        'age',
                        'personweight']
@@ -317,7 +318,8 @@ def data_working(dataf, estimate=1):
                        'working_t1',
                        'n_children',
                        'hh_youngest_age',
-                       'hh_income', 'hh_frac_working',
+                       'hh_income',
+                       'hh_frac_working',
                        'female',
                        'age',
                        'personweight']
@@ -381,7 +383,8 @@ def data_fulltime(dataf, estimate=1):
                        'working_t1',
                        'n_children',
                        'hh_youngest_age',
-                       'hh_income', 'hh_frac_working',
+                       'hh_income',
+                       'hh_frac_working',
                        'female',
                        'age',
                        'personweight']
@@ -522,7 +525,8 @@ def data_earnings(dataf, estimate=1):
                        'education',
                        'n_children',
                        'hh_youngest_age',
-                       'hh_income', 'hh_frac_working',
+                       'hh_income',
+                       'hh_frac_working',
                        'female',
                        'age',
                        'personweight']

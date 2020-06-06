@@ -20,6 +20,8 @@ df1['heizkosten'] = df1['heizkosten'].fillna(df1.groupby('pid')['heizkosten'].tr
 
 df1['bruttokaltmiete'] = df1['bruttokaltmiete'].fillna(df1.groupby('pid')['bruttokaltmiete'].transform('median'))
 
+df1['gross_earnings'] = df1['gross_earnings'].fillna(df1.groupby('pid')['gross_earnings'].transform('median'))
+
 # Setting hours to zero if not participating on labor market
 df1.loc[df1['lfs'] == 0, 'hours'] = 0
 

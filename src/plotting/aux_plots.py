@@ -2,17 +2,14 @@ import numpy as np
 import pandas as pd
 import os
 
-cwd = os.getcwd()
-sim_path = "/Users/christianhilscher/Desktop/dynsim/src/sim/"
-estimation_path = "/Users/christianhilscher/desktop/dynsim/src/estimation/"
 input_path = "/Users/christianhilscher/Desktop/dynsim/input/"
-
-os.chdir(cwd)
 ###############################################################################
 
 # Functions for plotting - have to outsource them
-def prepare_ownplots(orig_data, filled_dici, variable):
+def prepare_ownplots(filled_dici, variable):
 
+    df = filled_dici['standard']
+    orig_data = df[df['predicted']==0]
 
     df_comp = orig_data[orig_data['year']>1997]
     #df_comp = _make_cohort(df_comp)
@@ -78,17 +75,20 @@ def prepare_oecdplots():
     return oecd_plot
 
 
-def prepare_plots(orig_data, filled_dici, variable, oecd_data):
+def prepare_plots(filled_dici, variable, oecd_data):
+
+    df = filled_dici['standard']
+    orig_data = df[df['predicted']==0]
 
     if variable in oecd_data.columns.tolist():
         oecd_data = oecd_data[variable]
 
-        own_data = prepare_ownplots(orig_data, filled_dici, variable)
+        own_data = prepare_ownplots(filled_dici, variable)
 
         dataf = pd.concat([oecd_data, own_data], axis=1)
         dataf.rename(columns={variable: 'oecd'}, inplace=True)
     else:
-        dataf = prepare_ownplots(orig_data, filled_dici, variable)
+        dataf = prepare_ownplots(filled_dici, variable)
     dataf = dataf.dropna()
     return dataf
 
@@ -101,3 +101,29 @@ def weighted_average(df, data_col, weight_col, by_col):
     del df['_data_times_weight'], df['_weight_where_notnull']
     return result
 ##############################################################################
+# Cohort comparisons
+
+def prep_countbplot(dataf):
+    dataf = dataf.copy()
+
+    counts = dataf.groupby('pid')['pid'].count()
+    in_soep = np.empty(np.max(counts))
+
+    for i in np.arange(np.max(counts)):
+        in_soep[i] = sum(counts>i)
+
+    df_counts = pd.DataFrame(in_soep, columns=['count'])
+    df_counts['year'] = np.arange(1, np.max(counts)+1)
+    df_counts['relative'] = df_counts['count'] / len(np.unique(dataf['pid']))
+
+    return df_counts
+
+def prep_sizebplot(dataf):
+    dataf = dataf.copy()
+
+    size = dataf.groupby("year")["pid"].count()
+    size_df = pd.DataFrame(size)
+    size_df.columns = ["size"]
+    size_df.reset_index(inplace=True)
+
+    return size_df
