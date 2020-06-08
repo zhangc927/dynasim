@@ -27,10 +27,10 @@ os.chdir(cwd)
 ##############################################################################
 
 
-df = pd.read_pickle(input_path + 'not_imputed08').dropna()
+df = pd.read_pickle(input_path + 'joined.pkl').dropna()
 df1 = getdf(df)
 
 abc = fill_dataf(df1)
 
 pickle.dump(abc,
-            open(output_path + "filled_dici.pkl", "wb"))
+            open(output_path + "filled_dici_full.pkl", "wb"))

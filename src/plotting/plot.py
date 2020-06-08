@@ -7,8 +7,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 sns.set(style="darkgrid")
 
+from bokeh.plotting import show, output_file
 ###############################################################################
-current_week = 22
+current_week = "reduced_sample"
 output_week = "/Users/christianhilscher/desktop/dynsim/output/week" + str(current_week) + "/"
 pathlib.Path(output_week).mkdir(parents=True, exist_ok=True)
 ###############################################################################
@@ -17,48 +18,27 @@ output_path = "/Users/christianhilscher/Desktop/dynsim/output/"
 plot_path = "/Users/christianhilscher/Desktop/dynsim/src/plotting/"
 os.chdir(plot_path)
 ###############################################################################
-from aux_plots import prepare_oecdplots, prepare_plots
-
+from aux_plots import sizeplot, countplot, variable_means, plot_age_employment, plot_cohort_employment
+dataf = pd.read_pickle(output_path + "filled_dici_reduced.pkl")
 
 ###############################################################################
 # Comparing variable means
-dataf = pd.read_pickle(output_path + "filled_dici.pkl")
-
 var_list = ['lfs', 'working', 'fulltime', 'hours', 'gross_earnings', 'birth', 'married']
-oecd_data = prepare_oecdplots()
 
-# Plotting
-for variable in var_list:
-    vals = prepare_plots(dataf, variable, oecd_data)
+variable_means(dataf, var_list, output_week)
 
-    fig, ax = plt.subplots(1,2, figsize=(15,5), sharey=True)
-    ax[0].plot(vals['no_impute'], label='original SOEP')
-    ax[0].plot(vals['standard'], label='standard')
-    ax[0].plot(vals['ml'], label='ml')
-    #ax[0].plot(vals['ext_cond'], label='ext')
-    ax[0].title.set_text('all values: mean ' + variable)
+# Size and retention rate
+fig_count = countplot(dataf)
+fig_count.savefig(output_week + "duration.png")
 
-    ax[1].plot(vals['no_impute'], label='original SOEP')
-    ax[1].plot(vals['standard_cond'], label='standard')
-    ax[1].plot(vals['ml_cond'], label='ml')
-    #ax[1].plot(vals['ext_cond'], label='ext')
-    ax[1].title.set_text('only predicted: mean ' + variable)
+fig_size = sizeplot(dataf)
+fig_size.savefig(output_week + "size.png")
+###############################################################################
+df = dataf['ml']
+age_plot = plot_age_employment(df)
+output_file(output_week + "age_employment.html", title="Employment by age")
+show(age_plot)
 
-    if variable in oecd_data:
-        ax[0].plot(vals['oecd'], label='oecd')
-        ax[1].plot(vals['oecd'], label='oecd')
-    else:
-        pass
-
-    for a in ax:
-        a.grid(axis='x', visible=False)
-        a.legend()
-    #plt.xticks([1995, 2000, 2005, 2010, 2015])
-    fig.suptitle('Overall')
-    #plt.show()
-    plt.savefig(output_week + variable)
-
-
-########################################################
-########################################################
-########################################################
+cohort_plot = plot_cohort_employment(df)
+output_file(output_week + "cohort_employment.html", title="Employment by cohort")
+show(cohort_plot)

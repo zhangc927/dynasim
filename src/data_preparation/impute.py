@@ -22,6 +22,9 @@ df1['bruttokaltmiete'] = df1['bruttokaltmiete'].fillna(df1.groupby('pid')['brutt
 
 df1['gross_earnings'] = df1['gross_earnings'].fillna(df1.groupby('pid')['gross_earnings'].transform('median'))
 
+df1['tenure'].fillna(0)
+
+df1.loc[df1['hours']>0,'working'] = 1
 # Setting hours to zero if not participating on labor market
 df1.loc[df1['lfs'] == 0, 'hours'] = 0
 

@@ -28,13 +28,15 @@ fertility = pd.read_csv(input_path + "fertility")
 def death(dataf):
     dataf = dataf.copy()
 
-    deaths = np.zeros(len(dataf))
-    deaths[dataf['age']>dataf['age_max']] = 1
-    if np.sum(deaths)>0:
-        dataf.drop(deaths, inplace=True)
+    dataf['deaths'] = 0
+    dataf.loc[dataf['age']>dataf['age_max'], 'deaths'] = 1
+    if np.sum(dataf['deaths'])>0:
+        death_count = np.sum(dataf['deaths'])
+        dataf = dataf.loc[dataf['deaths']==0,:]
     else:
-        pass
-    return dataf, np.sum(deaths)
+        death_count = 0
+    dataf.drop('deaths', axis=1, inplace=True)
+    return dataf, death_count
 
 
 def dating_market(dataf):

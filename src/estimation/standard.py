@@ -584,7 +584,7 @@ def estimate_earnings(dataf):
                 open(model_path + "earnings_scaler", 'wb'))
 
 
-# df = pd.read_pickle(input_path + 'joined.pkl').dropna()
+# df = pd.read_pickle(input_path + 'imputed08').dropna()
 # df1 = getdf(df)
 #
 # estimate_lfs(df1)

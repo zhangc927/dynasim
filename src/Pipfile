@@ -8,12 +8,14 @@ verify_ssl = true
 [packages]
 numpy = "*"
 pandas = "*"
-numba = "*"
-os = "*"
+selenium = "*"
+bokeh = "*"
 sklearn = "*"
-importlib = "*"
-pickle = "*"
-seaborn = "*"
+matplotlib = "*"
+setuptools = "*"
+wheel = "*"
+scipy = "*"
+scikit-learn = "*"
 
 [requires]
 python_version = "3.8"

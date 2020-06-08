@@ -155,11 +155,9 @@ def fill_dataf(dataf):
 
     df_base = dataf[dataf['year'] == start]
     history_dici = {'standard': df_base,
-                    'ml': df_base,
-                    'ext': df_base}
+                    'ml': df_base}
     base_dici = {'standard': df_base,
-                    'ml': df_base,
-                    'ext': df_base}
+                    'ml': df_base}
     for i in np.arange(start, end):
         df = dataf.copy()
 

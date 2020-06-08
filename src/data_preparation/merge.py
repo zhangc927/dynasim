@@ -24,10 +24,6 @@ df_09.set_index(['pid', 'year'], inplace=True)
 
 joined= pd.concat([df_08, df_09])
 joined.reset_index(inplace=True)
-
-
-
-joined.to_pickle(input_path+'joined.pkl')
 ###########################################
 def drop_if_missing(dataf, varlist):
     dataf = dataf.copy()
@@ -49,3 +45,10 @@ def uniqueID(dataf):
 
 abc = uniqueID(joined1)
 sum(abc["ID"].duplicated())
+
+final = abc.drop_duplicates('ID')
+final.drop('ID',axis=1, inplace=True)
+final.drop('tenure',axis=1, inplace=True)
+
+final.to_pickle(input_path+'joined.pkl')
+quick_analysis(final)
