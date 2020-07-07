@@ -27,10 +27,16 @@ os.chdir(cwd)
 ##############################################################################
 
 
-df = pd.read_pickle(input_path + 'joined.pkl').dropna()
+df = pd.read_pickle(input_path + 'illmitz10_reduced').dropna()
 df1 = getdf(df)
+df2 = df1.drop_duplicates(subset="pid")
+df2
 
 abc = fill_dataf(df1)
+ghi = fill_dataf(df2)
 
 pickle.dump(abc,
-            open(output_path + "filled_dici_full.pkl", "wb"))
+            open(output_path + "filled_dici_illmitz_est_reduced.pkl", "wb"))
+
+pickle.dump(ghi,
+            open(output_path + "filled_dici_illmitz_est_reduced2.pkl", "wb"))

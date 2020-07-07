@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-def SOEP_to_df(dataf):
+def SOEP_to_df_old(dataf):
     """
     This function takes the SOEP data as a dataframe and returns the the harmonized data such that the rest of the code can work with it. It also renames the columns etc
     """

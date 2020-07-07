@@ -1,0 +1,67 @@
+import numpy as np
+import pandas as pd
+import pathlib
+import os
+
+import matplotlib.pyplot as plt
+
+from bokeh.layouts import row
+from bokeh.plotting import figure, output_file, show, gridplot
+from bokeh.models import ColumnDataSource, FactorRange
+from bokeh.palettes import Spectral6
+from bokeh.transform import factor_cmap
+###############################################################################
+current_week = "27"
+output_week = "/Users/christianhilscher/desktop/dynsim/output/week" + str(current_week) + "/"
+pathlib.Path(output_week).mkdir(parents=True, exist_ok=True)
+###############################################################################
+input_path = "/Users/christianhilscher/Desktop/dynsim/input/"
+output_path = "/Users/christianhilscher/Desktop/dynsim/output/"
+plot_path = "/Users/christianhilscher/Desktop/dynsim/src/plotting/"
+os.chdir(plot_path)
+
+
+def make_plot(dataf, into_future):
+    dataf = dataf.copy()
+
+    diff_ml = np.empty(len(into_future))
+    diff_standard = np.empty_like(diff_ml)
+
+    for i, ahead in enumerate(into_future):
+        df_ana = dataf[dataf["period_ahead"]==ahead]
+        real_value = df_ana[variable + "_x"].mean()
+        ml_value = df_ana[variable + "_y"].mean()
+        standard_value = df_ana[variable].mean()
+
+        diff_ml[i] = np.abs(real_value - ml_value)
+        diff_standard[i] = np.abs(real_value - standard_value)
+
+    future = [str(a) for a in into_future]
+    types = ["ml", "standard"]
+    x = [(a, type) for a in future for type in types]
+
+    counts = np.empty(len(diff_ml)*2)
+    counts[::2] = diff_ml
+    counts[1::2] = diff_standard
+
+    name = " Difference from real mean for " + variable
+
+    s = ColumnDataSource(data=dict(x=x, counts=counts))
+    p = figure(x_range=FactorRange(*x), title = name)
+    p.vbar(x='x', top='counts', width=0.9, source=s,fill_color=factor_cmap('x', palette=Spectral6, factors=types, start=1, end=2))
+    p.y_range.start = 0
+    p.x_range.range_padding = 0.1
+    p.xaxis.major_label_orientation = 1
+    p.xgrid.grid_line_color = None
+
+    return p
+
+
+df = pd.read_pickle(output_week + "df_analysis")
+
+into_future = np.arange(1, len(df["period_ahead"].unique()), 3)
+variable = "fulltime"
+
+a = make_plot(df, into_future)
+output_file(output_week + variable + ".html")
+show(a)

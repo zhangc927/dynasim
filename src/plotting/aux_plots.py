@@ -9,7 +9,7 @@ sns.set(style="darkgrid")
 from bokeh.plotting import figure, output_file, show, gridplot
 from bokeh.models import ColumnDataSource
 from bokeh.palettes import Spectral6
-from bokeh.io import export_png
+
 
 input_path = "/Users/christianhilscher/Desktop/dynsim/input/"
 ###############################################################################

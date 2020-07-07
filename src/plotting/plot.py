@@ -9,7 +9,7 @@ sns.set(style="darkgrid")
 
 from bokeh.plotting import show, output_file
 ###############################################################################
-current_week = "reduced_sample"
+current_week = "illmitz_est_reduced"
 output_week = "/Users/christianhilscher/desktop/dynsim/output/week" + str(current_week) + "/"
 pathlib.Path(output_week).mkdir(parents=True, exist_ok=True)
 ###############################################################################
@@ -19,7 +19,7 @@ plot_path = "/Users/christianhilscher/Desktop/dynsim/src/plotting/"
 os.chdir(plot_path)
 ###############################################################################
 from aux_plots import sizeplot, countplot, variable_means, plot_age_employment, plot_cohort_employment
-dataf = pd.read_pickle(output_path + "filled_dici_reduced.pkl")
+dataf = pd.read_pickle(output_path + "filled_dici_illmitz_est_reduced.pkl")
 
 ###############################################################################
 # Comparing variable means

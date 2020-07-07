@@ -21,7 +21,7 @@ def SOEP_to_df(dataf):
                                   'hgrent': 'bruttokaltmiete',
                                   'pgpsbil': 'education',
                                   'pld0131': 'married1',
-                                  'pgtatzeit_x': 'hours',
+                                  'pgtatzeit': 'hours',
                                   'loc1989': 'east1',
                                   'pgemplst': 'employment_status',
                                   'pgfamstd': 'married2',
