@@ -15,7 +15,7 @@ sim_path = "/Users/christianhilscher/desktop/dynsim/src/sim/"
 
 os.chdir(estimation_path)
 from standard import getdf, data_lfs, data_working, data_fulltime, data_hours, data_earnings
-from extended import data_general
+from multic import data_general
 os.chdir(sim_path)
 ##############################################################################
 ##############################################################################
@@ -83,15 +83,17 @@ def _ext(X, variable):
                             variable + '_extended.txt')
     pred = estimator.predict(X_scaled)
 
-    if variable in ['hours', 'earnings']:
+    if variable == "hours":
         # Inverse transform regression results
-        pred_scaled = pred
+        predictions = []
+
+        for x in pred:
+            predictions.append(np.argmax(x))
         # scaler = pd.read_pickle(model_path + variable + "_scaler")
         # pred_scaled = scaler.inverse_transform(pred)
     else:
         # Make binary prediction to straight 0 and 1
-        pred_scaled = np.zeros(len(pred))
-        pred_scaled[pred>0.5] = 1
+        pred_scaled = pred
 
     pred_scaled[pred_scaled<0] = 0
     return pred_scaled
@@ -164,9 +166,8 @@ def sim_lfs(dataf, type):
     elif type == 'ml':
         X = data_lfs(dataf, estimate=0)
         predictions = _ml(X, 'lfs')
-    elif type == 'ext':
-        X = data_general(dataf, dep_var='lfs', estimate=0)
-        predictions = _ext(X, 'lfs')
+    elif type == "ext":
+        predictions = np.zeros(len(dataf))
     else:
         raise ValueError("Unkown Type")
 
@@ -181,9 +182,8 @@ def sim_working(dataf, type):
     elif type == 'ml':
         X = data_working(dataf, estimate=0)
         predictions = _ml(X, 'working')
-    elif type == 'ext':
-        X = data_general(dataf, dep_var='working', estimate=0)
-        predictions = _ext(X, 'working')
+    elif type == "ext":
+        predictions = np.zeros(len(dataf))
     else:
         raise ValueError("Unkown Type")
 
@@ -198,9 +198,8 @@ def sim_fulltime(dataf, type):
     elif type == 'ml':
         X = data_fulltime(dataf, estimate=0)
         predictions = _ml(X, 'fulltime')
-    elif type == 'ext':
-        X = data_general(dataf, dep_var='working', estimate=0)
-        predictions = _ext(X, 'fulltime')
+    elif type == "ext":
+        predictions = np.zeros(len(dataf))
     else:
         raise ValueError("Unkown Type")
 
@@ -215,9 +214,9 @@ def sim_hours(dataf, type):
     elif type == 'ml':
         X = data_hours(dataf, estimate=0)
         predictions = _ml(X, 'hours')
-    elif type == 'ext':
-        X = data_general(dataf, dep_var='working', estimate=0)
-        predictions = _ext(X, 'hours')
+    elif type == "ext":
+        X = data_general(dataf, "hours", estimate=0)
+        predictions = _ext(X, "hours")
     else:
         raise ValueError("Unkown Type")
 
@@ -232,10 +231,18 @@ def sim_earnings(dataf, type):
     elif type == 'ml':
         X = data_earnings(dataf, estimate=0)
         predictions = _ml(X, 'earnings')
-    elif type == 'ext':
-        X = data_general(dataf, dep_var='working', estimate=0)
-        predictions = _ext(X, 'earnings')
+    elif type == "ext":
+        X = data_general(dataf, "gross_earnings", estimate=0)
+        predictions = _ext(X, "gross_earnings")
     else:
         raise ValueError("Unkown Type")
+
+    return predictions
+
+def sim_multi_employment(dataf):
+    dataf = dataf.copy()
+
+    X = data_general(dataf, "employment_status", estimate=0)
+    predictions = _ext(X, "employment_status")
 
     return predictions

@@ -11,7 +11,7 @@ from bokeh.models import ColumnDataSource, FactorRange
 from bokeh.palettes import Spectral6
 from bokeh.transform import factor_cmap
 ###############################################################################
-current_week = 27
+current_week = 30
 output_week = "/Users/christianhilscher/desktop/dynsim/output/week" + str(current_week) + "/"
 pathlib.Path(output_week).mkdir(parents=True, exist_ok=True)
 ###############################################################################
@@ -24,6 +24,8 @@ os.chdir(plot_path)
 def get_data(dataf, into_future, variable, metric):
     dataf = dataf.copy()
 
+    dataf = dataf[dataf["hours"]>0]
+
     diff_ml = []
     diff_standard = []
     for ahead in into_future:
@@ -35,8 +37,8 @@ def get_data(dataf, into_future, variable, metric):
     devs_standard = []
     if metric == "mean":
         for i, val in enumerate(diff_ml):
-            devs_ml.append(diff_ml[i].mean())
-            devs_standard.append(diff_standard[i].mean())
+            devs_ml.append(np.abs(diff_ml[i].mean()))
+            devs_standard.append(np.abs(diff_standard[i].mean()))
 
         dici = {"ml_value": devs_ml,
                 "standard_value": devs_standard}
@@ -49,8 +51,8 @@ def get_data(dataf, into_future, variable, metric):
                 "standard_value": devs_standard}
     elif metric == "median":
         for i, val in enumerate(diff_ml):
-            devs_ml.append(diff_ml[i].median())
-            devs_standard.append(diff_standard[i].median())
+            devs_ml.append(np.abs(diff_ml[i].median()))
+            devs_standard.append(np.abs(diff_standard[i].median()))
 
         dici = {"ml_value": devs_ml,
                 "standard_value": devs_standard}
@@ -91,7 +93,7 @@ def _get_percentiles(diff_ml, diff_standard, metric):
         ml_value = p50_ml / p10_ml
         standard_value = p50_standard / p10_standard
 
-    return ml_value, standard_value
+    return np.abs(ml_value), np.abs(standard_value)
 
 def plot_deviations(dataf, into_future, variable, metric):
     dataf = dataf.copy()
@@ -106,7 +108,7 @@ def plot_deviations(dataf, into_future, variable, metric):
 
     counts = dataf["value"]
 
-    name = metric + " of the deviations for " + variable
+    name = metric + " of deviations for " + variable
 
     s = ColumnDataSource(data=dict(x=x, counts=counts))
     p = figure(x_range=FactorRange(*x), title=name)
@@ -118,7 +120,7 @@ def plot_deviations(dataf, into_future, variable, metric):
     return p
 
 df = pd.read_pickle(output_week + "df_analysis")
-
+df["year"].unique()
 ahead = np.arange(1, len(df["period_ahead"].unique()), 5)
 
 variable = "gross_earnings"
@@ -134,3 +136,8 @@ for m in metrics:
 grid = gridplot([[plist[0], plist[1], plist[2]]], plot_width=400, plot_height=600)
 output_file(output_week + variable + ".html")
 show(grid)
+
+# me = "p90p50"
+# abc = get_data(df, ahead, variable, me)
+# plot = plot_deviations(abc, ahead, variable, me)
+# show(plot)

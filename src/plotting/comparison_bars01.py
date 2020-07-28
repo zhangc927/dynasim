@@ -11,7 +11,7 @@ from bokeh.models import ColumnDataSource, FactorRange
 from bokeh.palettes import Spectral6
 from bokeh.transform import factor_cmap
 ###############################################################################
-current_week = "27"
+current_week = "30"
 output_week = "/Users/christianhilscher/desktop/dynsim/output/week" + str(current_week) + "/"
 pathlib.Path(output_week).mkdir(parents=True, exist_ok=True)
 ###############################################################################
@@ -26,6 +26,7 @@ def make_plot(dataf, into_future):
 
     diff_ml = np.empty(len(into_future))
     diff_standard = np.empty_like(diff_ml)
+    real = np.empty_like(diff_ml)
 
     for i, ahead in enumerate(into_future):
         df_ana = dataf[dataf["period_ahead"]==ahead]
@@ -33,18 +34,20 @@ def make_plot(dataf, into_future):
         ml_value = df_ana[variable + "_y"].mean()
         standard_value = df_ana[variable].mean()
 
-        diff_ml[i] = np.abs(real_value - ml_value)
-        diff_standard[i] = np.abs(real_value - standard_value)
+        diff_ml[i] = ml_value
+        diff_standard[i] = standard_value
+        real[i] = real_value
 
     future = [str(a) for a in into_future]
-    types = ["ml", "standard"]
+    types = ["ml", "standard", "real"]
     x = [(a, type) for a in future for type in types]
 
-    counts = np.empty(len(diff_ml)*2)
-    counts[::2] = diff_ml
-    counts[1::2] = diff_standard
+    counts = np.empty(len(diff_ml)*3)
+    counts[::3] = diff_ml
+    counts[1::3] = diff_standard
+    counts[2::3] = real
 
-    name = " Difference from real mean for " + variable
+    name = "Mean of " + variable
 
     s = ColumnDataSource(data=dict(x=x, counts=counts))
     p = figure(x_range=FactorRange(*x), title = name)

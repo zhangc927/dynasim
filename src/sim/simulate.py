@@ -14,10 +14,7 @@ cwd = os.getcwd()
 ##############################################################################
 os.chdir(sim_path)
 from family_module import separations, marriage, dating_market, birth, death
-from work_module import sim_lfs, sim_working, sim_fulltime, sim_hours, sim_earnings, scale_data, make_hh_vars
-
-os.chdir(estimation_path)
-from standard import getdf
+from work_module import sim_lfs, sim_working, sim_fulltime, sim_hours, sim_earnings, scale_data, make_hh_vars, sim_multi_employment
 
 os.chdir(cwd)
 ##############################################################################
@@ -65,9 +62,11 @@ def _shift_vars(dataf):
     dataf['fulltime_t1'] = dataf['fulltime']
     dataf['hours_t2'] = dataf['hours_t1']
     dataf['gross_earnings_t2'] = dataf['gross_earnings_t1']
+    dataf['employment_status_t2'] = dataf['employment_status_t1']
 
     dataf['hours_t1'] = dataf['hours']
     dataf['gross_earnings_t1'] = dataf['gross_earnings']
+    dataf['employment_status_t1'] = dataf['employment_status']
 
     return dataf
 
@@ -121,6 +120,12 @@ def run_work_module(dataf, type):
         fulltime = 0
     dataf.loc[dataf['working'] == 1, 'fulltime'] = fulltime
 
+    if type == "ext":
+        empl = sim_multi_employment(dataf)
+        dataf["employment_status"] = empl
+    else:
+        pass
+
     if np.sum(working)>0:
         hours = sim_hours(dataf[dataf['working'] == 1], type)
     else:
@@ -155,9 +160,11 @@ def fill_dataf(dataf):
 
     df_base = dataf[dataf['year'] == start]
     history_dici = {'standard': df_base,
-                    'ml': df_base}
+                    'ml': df_base,
+                    'ext': df_base}
     base_dici = {'standard': df_base,
-                    'ml': df_base}
+                 'ml': df_base,
+                 'ext': df_base}
     for i in np.arange(start, end):
         df = dataf.copy()
 

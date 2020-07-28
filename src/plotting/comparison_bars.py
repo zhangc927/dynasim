@@ -10,7 +10,7 @@ from bokeh.plotting import figure, output_file, show, gridplot
 from bokeh.models import ColumnDataSource, FactorRange
 from bokeh.palettes import Spectral6
 ###############################################################################
-current_week = "illmitz_est_reduced"
+current_week = "30"
 output_week = "/Users/christianhilscher/desktop/dynsim/output/week" + str(current_week) + "/"
 pathlib.Path(output_week).mkdir(parents=True, exist_ok=True)
 ###############################################################################
@@ -25,7 +25,7 @@ def make_df(dataf, var):
     dataf = dataf.copy()
 
     j = 0
-    ahead_ls = np.arange(1, 25, 5)
+    ahead_ls = np.arange(1, 32, 3)
     out = pd.DataFrame(columns=["ahead", "frac_ml", "frac_standard"])
     for ahead in ahead_ls:
         df_ana = dataf[dataf["period_ahead"]==ahead]
