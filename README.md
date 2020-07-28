@@ -1,4 +1,4 @@
-# Dynsim
+# Dynasim
 
 Some short documentation regarding the code used for work. 
 
