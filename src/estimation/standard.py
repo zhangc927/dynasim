@@ -37,6 +37,8 @@ def getdf(dataf):
         df_now['hours_t2'] = df_twoyesterdays['hours']
         df_now['gross_earnings_t1'] = df_yesterday['gross_earnings']
         df_now['gross_earnings_t2'] = df_twoyesterdays['gross_earnings']
+        df_now['employment_status_t1'] = df_yesterday['employment_status']
+        df_now['employment_status_t2'] = df_twoyesterdays['employment_status']
 
         dataf_out = pd.concat([dataf_out, df_now])
 
@@ -584,12 +586,12 @@ def estimate_earnings(dataf):
                 open(model_path + "earnings_scaler", 'wb'))
 
 
-df = pd.read_pickle(input_path + 'illmitz10_reduced').dropna()
-df1 = getdf(df)
+# df = pd.read_pickle(input_path + 'illmitz10_reduced').dropna()
+# df1 = getdf(df)
 
-estimate_lfs(df1)
-estimate_working(df1)
-estimate_fulltime(df1)
-estimate_hours(df1)
-estimate_earnings(df1)
-estimate_birth(df1)
+# estimate_lfs(df1)
+# estimate_working(df1)
+# estimate_fulltime(df1)
+# estimate_hours(df1)
+# estimate_earnings(df1)
+# estimate_birth(df1)

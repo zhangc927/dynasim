@@ -10,7 +10,7 @@ from bokeh.plotting import figure, output_file, show, gridplot
 from bokeh.models import ColumnDataSource
 from bokeh.palettes import Spectral6
 ###############################################################################
-current_week = "illmitz_est"
+current_week = "30"
 output_week = "/Users/christianhilscher/desktop/dynsim/output/week" + str(current_week) + "/"
 pathlib.Path(output_week).mkdir(parents=True, exist_ok=True)
 ###############################################################################
@@ -43,10 +43,11 @@ def _hist_df(arr):
 
 def make_plot_earnings(dataf, ahead):
     dataf = dataf.copy()
+    dataf = dataf[dataf["hours"]>0]
     df_ana = dataf[dataf["period_ahead"]==ahead]
 
-    earnings_diff_ml = df_ana["gross_earnings_x"] - df_ana["gross_earnings_y"]
-    earnings_diff_standard = df_ana["gross_earnings_x"] - df_ana["gross_earnings"]
+    earnings_diff_ml = df_ana["hours_x"] - df_ana["hours_y"]
+    earnings_diff_standard = df_ana["hours_x"] - df_ana["hours"]
 
 
     abc = _hist_df(earnings_diff_ml)
@@ -60,7 +61,7 @@ def make_plot_earnings(dataf, ahead):
     src = ColumnDataSource(hist_df)
 
     sze = len(df_ana)
-    title = "gross_earnings: Errors with " + str(ahead) + " years ahead prediction. Sample Size: " + str(sze)
+    title = "hours: Errors with " + str(ahead) + " years ahead prediction. Sample Size: " + str(sze)
     p = figure(plot_height = 600, plot_width = 600,
                   y_axis_label = "Count", title=title)
 
@@ -82,5 +83,5 @@ def make_plts(dataf):
 
 
 pic = make_plts(df)
-output_file(output_week + "gross_earnings" + ".html")
+output_file(output_week + "hours_difference" + ".html")
 show(pic)

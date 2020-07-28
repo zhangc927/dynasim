@@ -5,22 +5,24 @@ import os
 
 
 ###############################################################################
-current_week = "illmitz_est_reduced"
+current_week = "30"
 output_week = "/Users/christianhilscher/desktop/dynsim/output/week" + str(current_week) + "/"
 pathlib.Path(output_week).mkdir(parents=True, exist_ok=True)
 ###############################################################################
 input_path = "/Users/christianhilscher/Desktop/dynsim/input/"
 output_path = "/Users/christianhilscher/Desktop/dynsim/output/"
 
-dici_full = pd.read_pickle(output_path + "filled_dici_illmitz_est_reduced.pkl")
-dici_est = pd.read_pickle(output_path + "filled_dici_illmitz_est_reduced2.pkl")
+dici_full = pd.read_pickle(output_path + "doc_full.pkl")
+dici_est = pd.read_pickle(output_path + "doc_full2.pkl")
 
 
 df_full_ml = dici_full["ml"]
 df_full_standard = dici_full["standard"]
+df_full_ext = dici_full["ext"]
 
 df_est_ml = dici_est["ml"]
 df_est_standard = dici_est["standard"]
+df_est_ext = dici_est["ext"]
 
 def make_ana_df(real_dici, predicted_dici):
     df_real = real_dici["ml"]
@@ -52,9 +54,21 @@ def make_ana_df(real_dici, predicted_dici):
 
     return out
 
+def make_cohort(dataf, birthyears):
+    dataf = dataf.copy()
+
+    birthyear = dataf["year"] - dataf["age"]
+    condition = [by in birthyears for by in birthyear]
+    dataf = dataf.loc[condition]
+    dataf = dataf[dataf["east"]==0]
+
+    return dataf
+
 
 df_analysis = make_ana_df(dici_full, dici_est)
 
+cohorts = np.arange(1945, 1955)
+df_out = make_cohort(df_analysis, cohorts)
 
 
-df_analysis.to_pickle(output_week + "df_analysis")
+df_out.to_pickle(output_week + "df_analysis_full")

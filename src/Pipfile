@@ -4,6 +4,7 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
+selenium = "*"
 
 [packages]
 numpy = "*"
@@ -16,6 +17,7 @@ setuptools = "*"
 wheel = "*"
 scipy = "*"
 scikit-learn = "*"
+jupyter = "*"
 
 [requires]
 python_version = "3.8"
